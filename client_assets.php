@@ -105,9 +105,11 @@ if (mysqli_num_rows($os_sql) > 0) {
 
     <div class="col-sm-12 mb-3">
         <div class="btn-group btn-block">
+            <a href="?client_id=<?php echo $client_id; ?>" class="btn <?php if ($_GET['type'] == '') { echo 'btn-primary'; } else { echo 'btn-default'; } ?>">All Assets<span class="right badge badge-light ml-2"><?php echo $all_count; ?></span></a>
+		
             <a href="?client_id=<?php echo $client_id; ?>&type=workstation" class="btn <?php if ($_GET['type'] == 'workstation') { echo 'btn-primary'; } else { echo 'btn-default'; } ?>"><i class="fa fa-fw fa-desktop mr-2"></i>Workstations<span class="right badge badge-light ml-2"><?php echo $workstation_count; ?></span></a>
          
-            <a href="?client_id=<?php echo $client_id; ?>&<?php echo $url_query_strings_sort; ?>&type=server" class="btn <?php if ($_GET['type'] == 'server') { echo 'btn-primary'; } else { echo 'btn-default'; } ?>"><i class="fa fa-fw fa-server mr-2"></i>Servers<span class="right badge badge-light ml-2"><?php echo $server_count; ?></span></a>
+            <a href="?client_id=<?php echo $client_id; ?>&type=server" class="btn <?php if ($_GET['type'] == 'server') { echo 'btn-primary'; } else { echo 'btn-default'; } ?>"><i class="fa fa-fw fa-server mr-2"></i>Servers<span class="right badge badge-light ml-2"><?php echo $server_count; ?></span></a>
  
             <a href="?client_id=<?php echo $client_id; ?>&type=virtual" class="btn <?php if ($_GET['type'] == 'virtual') { echo 'btn-primary'; } else { echo 'btn-default'; } ?>"><i class="fa fa-fw fa-cloud mr-2"></i>Virtual<span class="right badge badge-light ml-2"><?php echo $virtual_count; ?></span></a>
       
