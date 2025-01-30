@@ -1,5 +1,8 @@
 <?php
 
+// Cron scripts have now moved to the /scripts folder
+// This file will soon be removed from the project
+
 // Set working directory to the directory this cron script lives at.
 chdir(dirname(__FILE__));
 
@@ -326,7 +329,7 @@ if (mysqli_num_rows($sql_scheduled_tickets) > 0) {
         if (!empty($config_smtp_host) && $config_ticket_client_general_notifications == 1 && filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
 
             $email_subject = "Ticket created - [$ticket_prefix$ticket_number] - $ticket_subject (scheduled)";
-            $email_body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been automatically created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: Open<br>Portal: https://$config_base_url/portal/ticket.php?id=$id<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+            $email_body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been automatically created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: Open<br>Portal: https://$config_base_url/client/ticket.php?id=$id<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
 
             $email = [
                     'from' => $config_ticket_from_email,
@@ -360,7 +363,7 @@ if (mysqli_num_rows($sql_scheduled_tickets) > 0) {
         }
 
         // Add to the mail queue
-        addToMailQueue($mysqli, $data);
+        addToMailQueue($data);
 
         // Set the next run date
         if ($frequency == "weekly") {
@@ -482,9 +485,9 @@ if ($config_send_invoice_reminders == 1) {
             $subject = "Overdue Invoice $invoice_prefix$invoice_number";
             $body = "Hello $contact_name,<br><br>Our records indicate that we have not yet received payment for the invoice $invoice_prefix$invoice_number. We kindly request that you submit your payment as soon as possible. If you have any questions or concerns, please do not hesitate to contact us at $company_email or $company_phone.
                 <br><br>
-                Kindly review the invoice details mentioned below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>Due Date: $invoice_due<br>Over Due By: $day Days<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+                Kindly review the invoice details mentioned below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>Due Date: $invoice_due<br>Over Due By: $day Days<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
 
-            $mail = addToMailQueue($mysqli, [
+            $mail = addToMailQueue([
                 [
                     'from' => $config_invoice_from_email,
                     'from_name' => $config_invoice_from_name,
@@ -493,7 +496,7 @@ if ($config_send_invoice_reminders == 1) {
                     'subject' => $subject,
                     'body' => $body
                 ]
-                ]);
+            ]);
 
             if ($mail === true) {
                 mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Sent', history_description = 'Cron Emailed Overdue Invoice', history_invoice_id = $invoice_id");
@@ -516,7 +519,12 @@ if ($config_send_invoice_reminders == 1) {
 // Send Recurring Invoices that match todays date and are active
 
 //Loop through all recurring that match today's date and is active
-$sql_recurring = mysqli_query($mysqli, "SELECT * FROM recurring LEFT JOIN clients ON client_id = recurring_client_id WHERE recurring_next_date = CURDATE() AND recurring_status = 1");
+$sql_recurring = mysqli_query($mysqli, "SELECT * FROM recurring
+    LEFT JOIN recurring_payments ON recurring_id = recurring_payment_recurring_invoice_id
+    LEFT JOIN clients ON client_id = recurring_client_id
+    WHERE recurring_next_date = CURDATE() 
+    AND recurring_status = 1
+");
 
 while ($row = mysqli_fetch_array($sql_recurring)) {
     $recurring_id = intval($row['recurring_id']);
@@ -534,7 +542,11 @@ while ($row = mysqli_fetch_array($sql_recurring)) {
     $client_id = intval($row['recurring_client_id']);
     $client_name = sanitizeInput($row['client_name']);
     $client_net_terms = intval($row['client_net_terms']);
-
+    
+    $recurring_payment_recurring_invoice_id = intval($row['recurring_payment_recurring_invoice_id']);
+    $recurring_payment_currency_code = sanitizeInput($row['recurring_payment_currency_code']);
+    $recurring_payment_method = sanitizeInput($row['recurring_payment_method']);
+    $recurring_payment_account_id = intval($row['recurring_payment_account_id']);
 
     // Get the last Invoice Number and add 1 for the new invoice number
     $sql_invoice_number = mysqli_query($mysqli, "SELECT * FROM settings WHERE company_id = 1");
@@ -605,9 +617,9 @@ while ($row = mysqli_fetch_array($sql_recurring)) {
         $contact_email = sanitizeInput($row['contact_email']);
 
         $subject = "Invoice $invoice_prefix$invoice_number";
-        $body = "Hello $contact_name,<br><br>An invoice regarding \"$invoice_scope\" has been generated. Please view the details below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $recurring_currency_code) . "<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest_view_invoice.php?invoice_id=$new_invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+        $body = "Hello $contact_name,<br><br>An invoice regarding \"$invoice_scope\" has been generated. Please view the details below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $recurring_currency_code) . "<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$new_invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
 
-        $mail = addToMailQueue($mysqli, [
+        $mail = addToMailQueue([
             [
                 'from' => $config_invoice_from_email,
                 'from_name' => $config_invoice_from_name,
@@ -654,10 +666,28 @@ while ($row = mysqli_fetch_array($sql_recurring)) {
                 ]
             ];
 
-            addToMailQueue($mysqli, $data);
+            addToMailQueue($data);
         }
 
     } //End if Autosend is on
+
+    // Create Payment from Auto Payment
+    if ($recurring_payment_recurring_invoice_id) {
+       mysqli_query($mysqli,"INSERT INTO payments SET payment_date = CURDATE(), payment_amount = $recurring_amount, payment_currency_code = '$recurring_payment_currency_code', payment_account_id = $recurring_payment_account_id, payment_method = '$recurring_payment_method', payment_reference = 'Paid via AutoPay', payment_invoice_id = $new_invoice_id");
+
+        // Get Payment ID for reference
+        $payment_id = mysqli_insert_id($mysqli);
+
+        // Update Invoice Status
+        mysqli_query($mysqli,"UPDATE invoices SET invoice_status = 'Paid' WHERE invoice_id = $new_invoice_id");
+
+        //Add Payment to History
+        mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Paid', history_description = 'Payment added via Auto Pay', history_invoice_id = $new_invoice_id");
+
+        // Logging
+        logAction("Invoice", "Payment", "Auto Payment amount of " . numfmt_format_currency($currency_format, $recurring_amount, $recurring_payment_currency_code) . " added to invoice $invoice_prefix$invoice_number", $client_id, $new_invoice_id);                     
+    } //End Auto Payment
+
 } //End Recurring Invoices Loop
 
 // Logging
@@ -976,8 +1006,9 @@ if ($updates->current_version !== $updates->latest_version) {
  * ###############################################################################################################
  */
 
-// Send Alert to inform Cron was run
-appNotify("Cron", "Cron successfully executed", "admin_audit_log.php");
+// Alert we're using the old cron path
+appNotify("Cron", "Cron ran OK, but paths need updating - cron scripts are now in the scripts subfolder", "admin_audit_log.php");
 
 // Logging
 logApp("Cron", "info", "Cron executed successfully");
+logApp("Cron", "warning", "Cron ran using an old script path");

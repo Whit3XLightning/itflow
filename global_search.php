@@ -1,6 +1,6 @@
 <?php
 
-require_once "inc_all.php";
+require_once "includes/inc_all.php";
 
 // Initialize the HTML Purifier to prevent XSS
 require "plugins/htmlpurifier/HTMLPurifier.standalone.php";
@@ -142,12 +142,12 @@ if (isset($_GET['query'])) {
     ?>
 
 
-    <div class="row">
-
-        <div class="col-sm-12">
+    <div class="col-sm-12">
+        <div class="card card-body mb-3">
             <h4 class="text-center"><i class="fas fa-fw fa-search mr-2"></i>Global Search</h4>
-            <hr>
         </div>
+    </div>
+
 
         <?php if (mysqli_num_rows($sql_clients) > 0) { ?>
 
@@ -847,7 +847,7 @@ if (isset($_GET['query'])) {
 
 }
 
-require_once "footer.php";
+require_once "includes/footer.php";
 
 ?>
 

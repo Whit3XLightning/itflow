@@ -4,7 +4,7 @@
 $sort = "user_role_is_admin";
 $order = "DESC";
 
-require_once "inc_all_admin.php";
+require_once "includes/inc_all_admin.php";
 
 
 //Rebuild URL
@@ -21,7 +21,7 @@ $sql = mysqli_query(
 $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 ?>
-    <div class="alert alert-warning"><strong>Roles are still in development. Permissions may not be fully enforced.</strong><hr></div>
+    <div class="alert alert-warning text-center"><strong>Roles are still in development. Permissions may not be fully enforced.</strong></div>
 
     <div class="card card-dark">
         <div class="card-header py-2">
@@ -110,11 +110,10 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                             </a>
 
                                             <?php if (empty($role_archived_at) && $role_user_count == 0) { ?>
-                                                    <!-- To be added -->
                                                 <div class="dropdown-divider"></div>
-<!--                                                <a class="dropdown-item text-danger confirm-link" href="post.php?archive_role=--><?php //echo $role_id; ?><!--&csrf_token=--><?php //echo $_SESSION['csrf_token'] ?><!--">-->
-<!--                                                    <i class="fas fa-fw fa-archive mr-2"></i>Archive-->
-<!--                                                </a>-->
+                                                <a class="dropdown-item text-danger confirm-link" href="post.php?archive_role=<?php echo $role_id; ?>&csrf_token=<?php echo $_SESSION['csrf_token'] ?>">
+                                                    <i class="fas fa-fw fa-archive mr-2"></i>Archive
+                                                </a>
                                             <?php } ?>
 
                                         </div>
@@ -125,7 +124,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
                         <?php
 
-                        require "admin_role_edit_modal.php";
+                        require "modals/admin_role_edit_modal.php";
 
 
                     }
@@ -135,14 +134,14 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </tbody>
                 </table>
             </div>
-            <?php require_once "pagination.php";
+            <?php require_once "includes/filter_footer.php";
             ?>
         </div>
     </div>
 
 <?php
 
-require_once "admin_role_add_modal.php";
+require_once "modals/admin_role_add_modal.php";
 
-require_once "footer.php";
+require_once "includes/footer.php";
 

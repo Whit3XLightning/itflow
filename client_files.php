@@ -4,7 +4,7 @@
 $sort = "file_name";
 $order = "ASC";
 
-require_once "inc_all_client.php";
+require_once "includes/inc_all_client.php";
 
 
 // Folder
@@ -213,7 +213,7 @@ while ($folder_id > 0) {
                             echo '</div>';
 
                             // Include the rename and create subfolder modals
-                            require "folder_rename_modal.php";
+                            require "modals/folder_rename_modal.php";
 
                             if ($subfolder_count > 0) {
                                 // Display subfolders
@@ -230,7 +230,7 @@ while ($folder_id > 0) {
                     display_folders(0, $client_id);
                     ?>
                 </ul>
-                <?php require_once "folder_create_modal.php"; ?>
+                <?php require_once "modals/folder_create_modal.php"; ?>
             </div>
 
 
@@ -386,7 +386,7 @@ while ($folder_id > 0) {
                         </div>
 
                         <?php
-                        require "client_file_view_modal.php";
+                        require "modals/client_file_view_modal.php";
 
                     }
                     ?>
@@ -473,6 +473,7 @@ while ($folder_id > 0) {
                                 $file_size_KB = number_format($file_size / 1024);
                                 $file_mime_type = nullable_htmlentities($row['file_mime_type']);
                                 $file_size = intval($row['file_size']);
+                                $file_uploaded_by = nullable_htmlentities($row['user_name']);
                                 $file_has_thumbnail = intval($row['file_has_thumbnail']);
                                 $file_has_preview = intval($row['file_has_preview']);
                                 $file_created_at = nullable_htmlentities($row['file_created_at']);
@@ -490,19 +491,22 @@ while ($folder_id > 0) {
                                     AND item_related_id = $file_id
                                     LIMIT 1"
                                 );
-                                $row = mysqli_fetch_array($sql_shared);
-                                $item_id = intval($row['item_id']);
-                                $item_active = nullable_htmlentities($row['item_active']);
-                                $item_key = nullable_htmlentities($row['item_key']);
-                                $item_type = nullable_htmlentities($row['item_type']);
-                                $item_related_id = intval($row['item_related_id']);
-                                $item_note = nullable_htmlentities($row['item_note']);
-                                $item_recipient = nullable_htmlentities($row['item_recipient']);
-                                $item_views = nullable_htmlentities($row['item_views']);
-                                $item_view_limit = nullable_htmlentities($row['item_view_limit']);
-                                $item_created_at = nullable_htmlentities($row['item_created_at']);
-                                $item_expire_at = nullable_htmlentities($row['item_expire_at']);
-                                $item_expire_at_human = timeAgo($row['item_expire_at']);
+                                $file_shared = (mysqli_num_rows($sql_shared) > 0) ? true : false;
+                                if ($file_shared) {
+                                    $row = mysqli_fetch_array($sql_shared);
+                                    $item_id = intval($row['item_id']);
+                                    $item_active = nullable_htmlentities($row['item_active']);
+                                    $item_key = nullable_htmlentities($row['item_key']);
+                                    $item_type = nullable_htmlentities($row['item_type']);
+                                    $item_related_id = intval($row['item_related_id']);
+                                    $item_note = nullable_htmlentities($row['item_note']);
+                                    $item_recipient = nullable_htmlentities($row['item_recipient']);
+                                    $item_views = nullable_htmlentities($row['item_views']);
+                                    $item_view_limit = nullable_htmlentities($row['item_view_limit']);
+                                    $item_created_at = nullable_htmlentities($row['item_created_at']);
+                                    $item_expire_at = nullable_htmlentities($row['item_expire_at']);
+                                    $item_expire_at_human = timeAgo($row['item_expire_at']);
+                                }
 
                                 ?>
 
@@ -533,7 +537,7 @@ while ($folder_id > 0) {
                                         <div class="text-secondary mt-1"><?php echo $file_uploaded_by; ?></div>        
                                     </td>
                                     <td>
-                                        <?php if (mysqli_num_rows($sql_shared) > 0) { ?>
+                                        <?php if ($file_shared) { ?>
                                             <div class="media" title="Expires <?php echo $item_expire_at_human; ?>">
                                                 <i class="fas fa-link mr-2 mt-1"></i>
                                                 <div class="media-body">Shared
@@ -579,11 +583,9 @@ while ($folder_id > 0) {
                                     </td>
                                 </tr>
                                 <?php
-                                require "client_file_rename_modal.php";
-
-                                require "client_file_move_modal.php";
-
-                                require "client_file_link_asset_modal.php";
+                                require "modals/client_file_rename_modal.php";
+                                require "modals/client_file_move_modal.php";
+                                require "modals/client_file_link_asset_modal.php";
 
                             }
                             ?>
@@ -591,12 +593,12 @@ while ($folder_id > 0) {
 
                         </table>
                     </div>
-                    <?php require_once "client_file_bulk_move_modal.php"; ?>
+                    <?php require_once "modals/client_file_bulk_move_modal.php"; ?>
                 </form>
 
                 <?php } ?>
 
-                <?php require_once "pagination.php";
+                <?php require_once "includes/filter_footer.php";
  ?>
 
             </div>
@@ -630,10 +632,7 @@ function prevFile() {
 <script src="js/bulk_actions.js"></script>
 
 <?php
-require_once "client_file_upload_modal.php";
-
-require_once "share_modal.php";
-
-require_once "client_file_delete_modal.php";
-
-require_once "footer.php";
+require_once "modals/client_file_upload_modal.php";
+require_once "modals/share_modal.php";
+require_once "modals/client_file_delete_modal.php";
+require_once "includes/footer.php";

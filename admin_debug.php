@@ -1,15 +1,16 @@
 <?php
 
-require_once "inc_all_admin.php";
-
-require_once "database_version.php";
-
+require_once "includes/inc_all_admin.php";
+require_once "includes/database_version.php";
 require_once "config.php";
 
 $checks = [];
 
 // Execute the git command to get the latest commit hash
-$commitHash = exec('git log -1 --format=%H');
+$commitHash = shell_exec('git log -1 --format=%H');
+
+// Get branch info
+$gitBranch = shell_exec('git rev-parse --abbrev-ref HEAD');
 
 // Section: System Information
 $systemInfo = [];
@@ -519,12 +520,20 @@ $mysqli->close();
 
         <table class="table table-bordered mb-3">
             <tr>
-                <td>Current App Version</td>
-                <th><?php echo $commitHash; ?></th>
+                <th>ITFlow release version</th>
+                <th><?php echo APP_VERSION; ?></th>
             </tr>
             <tr>
                 <td>Current DB Version</td>
-                <th><?php echo CURRENT_DATABASE_VERSION; ?></th>
+                <td><?php echo CURRENT_DATABASE_VERSION; ?></td>
+            </tr>
+            <tr>
+                <td>Current Code Commit</td>
+                <td><?php echo $commitHash; ?></td>
+            </tr>
+            <tr>
+                <td>Current Branch</td>
+                <td><?php echo $gitBranch; ?></td>
             </tr>
         </table>
 
@@ -744,5 +753,5 @@ $mysqli->close();
 
 <?php
 
-require_once "footer.php";
+require_once "includes/footer.php";
 

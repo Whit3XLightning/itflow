@@ -2,9 +2,9 @@
 
 // If client_id is in URI then show client Side Bar and client header
 if (isset($_GET['client_id'])) {
-    require_once "inc_all_client.php";
+    require_once "includes/inc_all_client.php";
 } else { 
-    require_once "inc_all.php";
+    require_once "includes/inc_all.php";
 }
 
 if (isset($_GET['recurring_id'])) {
@@ -17,6 +17,7 @@ if (isset($_GET['recurring_id'])) {
         LEFT JOIN clients ON recurring_client_id = client_id
         LEFT JOIN contacts ON clients.client_id = contacts.contact_client_id AND contact_primary = 1
         LEFT JOIN locations ON clients.client_id = locations.location_client_id AND location_primary = 1
+        LEFT JOIN recurring_payments ON recurring_payment_recurring_invoice_id = recurring_id
         WHERE recurring_id = $recurring_id"
     );
 
@@ -59,6 +60,12 @@ if (isset($_GET['recurring_id'])) {
         $status = "Inactive";
         $status_badge_color = "secondary";
     }
+    $recurring_payment_id = intval($row['recurring_payment_id']);
+    $recurring_payment_recurring_invoice_id = intval($row['recurring_payment_recurring_invoice_id']);
+
+    // Override Tab Title // No Sanitizing needed as this var will opnly be used in the tab title
+    $tab_title = $row['client_name'];
+    $page_title = "{$row['recurring_prefix']}{$row['recurring_number']}";
 
     $sql = mysqli_query($mysqli, "SELECT * FROM companies WHERE company_id = 1");
     $row = mysqli_fetch_array($sql);
@@ -120,6 +127,18 @@ if (isset($_GET['recurring_id'])) {
                         <?php } else { ?>
                             <a href="post.php?recurring_invoice_email_notify=1&recurring_id=<?php echo $recurring_id; ?>" class="btn btn-outline-danger"><i class="fas fa-fw fa-bell-slash mr-2"></i>Email Notify</a>
                         <?php } ?>
+                    <?php } ?>
+
+                    <?php if ($recurring_payment_recurring_invoice_id) { ?>
+                        <a class="btn btn-outline-secondary" href="post.php?delete_recurring_payment=<?php echo $recurring_payment_id; ?>">
+                            <i class="fas fa-fw fa-times-circle mr-2"></i>Disable AutoPay
+                        </a>
+                    <?php } else { ?>
+                        <a class="btn btn-secondary" href='#' data-toggle="modal" data-target="#addRecurringPaymentModal<?php echo $recurring_id; ?>">
+                            <i class="fas fa-fw fa-redo-alt mr-2"></i>Create AutoPay
+                        </a>
+                        <?php require_once "modals/recurring_payment_add_modal.php"; ?>
+
                     <?php } ?>
                 </div>
 
@@ -299,7 +318,7 @@ if (isset($_GET['recurring_id'])) {
 
                                     <?php
 
-                                    require "item_edit_modal.php";
+                                    require "modals/item_edit_modal.php";
 
 
                                     }
@@ -455,13 +474,13 @@ if (isset($_GET['recurring_id'])) {
 
     <?php
 
-    require_once "recurring_invoice_edit_modal.php";
+    require_once "modals/recurring_invoice_edit_modal.php";
 
-    require_once "recurring_invoice_note_modal.php";
+    require_once "modals/recurring_invoice_note_modal.php";
 
 }
 
-require_once "footer.php";
+require_once "includes/footer.php";
 
 
 ?>
